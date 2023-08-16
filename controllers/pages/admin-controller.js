@@ -1,6 +1,5 @@
 const { Restaurant, User, Category } = require('../../models')
 const { imgurFileHandler } = require('../../helpers/file-helpers')
-// const { getOffset, getPagination } = require('../../helpers/pagination-helper')
 
 const adminServices = require('../../services/admin-services')
 
@@ -17,27 +16,11 @@ const restaurantController = {
       }).catch(err => { next(err) })
   },
   postRestaurant: (req, res, next) => {
-    const { name, tel, address, openingHours, description, categoryId } = req.body // 從 req.body 拿出表單裡的資料
-    if (!name) throw new Error('Restaurant name is required!') // name 是必填，若發先是空值就會終止程式碼，並在畫面顯示錯誤提示
-
-    const { file } = req
-
-    imgurFileHandler(file).then(filePath => {
-      return Restaurant.create({ // 產生一個新的 Restaurant 物件實例，並存入資料庫
-        name,
-        tel,
-        address,
-        openingHours,
-        description,
-        image: filePath || null,
-        categoryId
-      })
+    adminServices.postRestaurant(req, (err, data) => {
+      if (err) return next(err)
+      req.flash('success_messages', 'restaurant was successfully created')
+      res.redirect('/admin/restaurants', data)
     })
-      .then(() => {
-        req.flash('success_messages', 'restaurant was successfully created') // 在畫面顯示成功提示
-        res.redirect('/admin/restaurants') // 新增完成後導回後台首頁
-      })
-      .catch(err => next(err))
   },
   getRestaurant: (req, res) => {
     return Restaurant.findByPk(req.params.rest_id, {
